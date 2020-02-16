@@ -65,7 +65,6 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* newpcb)
 {
     NoffHeader noffH;
     unsigned int i, size;
-    int read;
 
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
@@ -121,14 +120,14 @@ AddrSpace::AddrSpace(OpenFile *executable, PCB* newpcb)
         if (noffH.code.size > 0) {
             DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", 
                 noffH.code.virtualAddr, noffH.code.size);
-            read = ReadFile(noffH.code.virtualAddr,executable,noffH.code.size,
-                noffH.code.inFileAddr);
+            ASSERT(ReadFile(noffH.code.virtualAddr,executable,noffH.code.size,
+                noffH.code.inFileAddr) == 0);
         }
         if (noffH.initData.size > 0) {
             DEBUG('a', "Initializing data segment, at 0x%x, size %d\n", 
                 noffH.initData.virtualAddr, noffH.initData.size);
-            read = ReadFile(noffH.initData.virtualAddr,executable,
-                noffH.initData.size,noffH.initData.inFileAddr);
+            ASSERT(ReadFile(noffH.initData.virtualAddr,executable,
+                noffH.initData.size,noffH.initData.inFileAddr) == 0);
         }
     }
 
@@ -199,7 +198,7 @@ AddrSpace::~AddrSpace()
 {
     if (isValid()) {
         memoryManager->lock->Acquire();
-        for (int i = 0; i < numPages; i++) { // free the pages
+        for (unsigned int i = 0; i < numPages; i++) { // free the pages
             memoryManager->clearPage(pageTable[i].physicalPage);
         }
         memoryManager->lock->Release();
@@ -282,7 +281,7 @@ int AddrSpace::Translate(int virtualAddress) {
     int offset = virtualAddress % PageSize;
     int physicalAddress = 0;
 
-    if (virtualAddress < 0 || pageTableIndex > numPages) {
+    if (virtualAddress < 0 || pageTableIndex > (int)numPages) {
         physicalAddress = -1;
     } else {
         physicalAddress = 

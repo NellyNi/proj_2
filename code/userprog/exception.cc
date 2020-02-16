@@ -73,9 +73,9 @@ void ExceptionHandler(ExceptionType which)
     int newProcessPID = 0;
     int otherProcessStatus = 0;
     int result = 0;
-    int arg1 = 0;
-    int arg2 = 0;
-    int arg3 = 0;
+    //int arg1 = 0;
+    //int arg2 = 0;
+    //int arg3 = 0;
     char* filename = new char[MAX_FILENAME_LEN];
 
     int type = machine->ReadRegister(2);
@@ -209,8 +209,8 @@ int forkImpl() {
     
 
     // Mandatory printout of the forked process
-    PCB* parentPCB = currentThread->space->getPCB();
-    PCB* childPCB = childThread->space->getPCB();
+    //PCB* parentPCB = currentThread->space->getPCB();
+    //PCB* childPCB = childThread->space->getPCB();
     fprintf(stderr, "Process %d Fork: start at address 0x%x with %d pages memory\n",
         currPID, newProcessPC, childNumPages);
     
@@ -371,7 +371,7 @@ SpaceId execImpl(char* filename) {
     // Close file and execute new process
     delete fileToExecute;
     fprintf(stderr, "Exec Program: %d loading %s\n", currPID, filename);
-    newThread->Fork(execHelper, NULL);
+    newThread->Fork(execHelper, 0);
     currentThread->Yield();
     return newPID;
 }
@@ -436,7 +436,7 @@ char* copyString(char* oldStr) {
     char* newStr = new char[MAX_FILENAME_LEN];
     for (int i = 0; i < MAX_FILENAME_LEN; i++) {
         newStr[i] = oldStr[i];
-        if (oldStr[i] == NULL) {
+        if (oldStr[i] == '\0') {
             break;
         }
     }
@@ -458,11 +458,11 @@ int openImpl(char* filename) {
             fprintf(stderr, "Unable to open the file %s\n", filename);
             return -1;
         }
-        SysOpenFile currSysFile;
-        currSysFile.file = openFile;
-        currSysFile.numProcessesAccessing = 1;
-        currSysFile.filename = copyString(filename);
-        index = openFileManager->addFile(currSysFile);
+        SysOpenFile curSysFile;
+        curSysFile.file = openFile;
+        curSysFile.numProcessesAccessing = 1;
+        curSysFile.filename = copyString(filename);
+        index = openFileManager->addFile(curSysFile);
     }
     else { // the file is already open by another process
         currSysFile->numProcessesAccessing++;
@@ -577,7 +577,7 @@ void writeImpl() {
 
 int readImpl() {
 
-    int readAddr = machine->ReadRegister(4);
+    //int readAddr = machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
     int fileID = machine->ReadRegister(6);
     char* buffer = new char[size + 1];

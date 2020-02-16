@@ -13,10 +13,10 @@
 //     Constructor
 //-----------------------------------------------------------------------------
 
-PCB::PCB(int pid, int parentPID) : openFilesBitMap(MAX_NUM_FILES_OPEN) {
+PCB::PCB(int PID, int parentPid) : openFilesBitMap(MAX_NUM_FILES_OPEN) {
 
-    this->pid = pid;
-    this->parentPID = parentPID;
+    this->pid = PID;
+    this->parentPID = parentPid;
     this->process = NULL;
     openFilesBitMap.Mark(0); // account for already open files
     openFilesBitMap.Mark(1);

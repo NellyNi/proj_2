@@ -23,7 +23,7 @@ class Thread;
 class PCB {
 
     public:
-        PCB(int pid, int parentPID);
+        PCB(int PID, int parentPid);
         ~PCB();
         int getPID();
         int status;

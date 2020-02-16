@@ -21,12 +21,14 @@ MemoryManager::~MemoryManager() {
 }
 
 // Allocates the first clear page
+// Return -1 upon error.
 int MemoryManager::getPage() {
 
     int pageIndex = physPageAllocation->Find(); // sets the bit as a side-effect
     if (pageIndex == -1) {
         DEBUG('m', "Unable to find a page from the page table.");
         ASSERT(FALSE);
+        return -1;
     } else {
         return pageIndex;
     }
@@ -38,6 +40,6 @@ void MemoryManager::clearPage(int pageIndex) {
 }
 
 // Returns the number of available pages
-int MemoryManager::getNumFreePages() {
+unsigned int MemoryManager::getNumFreePages() {
     return physPageAllocation->NumClear();
 }

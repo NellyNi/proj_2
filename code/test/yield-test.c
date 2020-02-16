@@ -14,7 +14,7 @@ void print(char *s)
 	Write(s-len-1, len, 1);
 }
 
-proc3()
+void proc3()
 {
 	print("proc3 Yielding...\n");
 	Yield();
@@ -23,7 +23,7 @@ proc3()
 	//Halt();
 }
 
-proc2()
+void proc2()
 {
 	print("proc2 Yielding...\n");
 	Yield();
@@ -31,7 +31,7 @@ proc2()
 	Exit(0);
 }
 
-proc1()
+void proc1()
 {
 	print("proc1 Yielding...\n");
 	Yield();

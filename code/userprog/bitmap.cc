@@ -108,10 +108,10 @@ BitMap::Find()
 //	(In other words, how many bits are unallocated?)
 //----------------------------------------------------------------------
 
-int
+unsigned int
 BitMap::NumClear()
 {
-    int count = 0;
+    unsigned int count = 0;
 
     for (int i = 0; i < numBits; i++)
         if (!Test(i)) count++;

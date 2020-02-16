@@ -20,7 +20,7 @@ class MemoryManager {
         ~MemoryManager();
         int getPage();                // allocates the first clear page
         void clearPage(int);          // frees the page at specified index
-        int getNumFreePages();        // returns the number of free pages
+        unsigned int getNumFreePages();        // returns the number of free pages
 
         Lock *lock;
 
