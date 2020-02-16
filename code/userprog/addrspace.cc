@@ -167,6 +167,14 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* newpcb) {
         //Also (other->pageTable)[i] gives the i-th logical page table entry of "other" process.
         //Thus you will fill code inside the loop body of  for (int i = 0; i < numPages; i++) {  }
 
+        for (int i = 0; i < numPages; i++) {
+            pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
+            pageTable[i].physicalPage = memoryManager->getPage();
+            pageTable[i].valid = TRUE;
+            pageTable[i].use = FALSE;
+            pageTable[i].dirty = FALSE;
+            pageTable[i].readOnly = FALSE;
+        }
 
         memoryManager->lock->Release();
 
@@ -179,6 +187,18 @@ AddrSpace::AddrSpace(const AddrSpace* other, PCB* newpcb) {
         //you can use (other->pageTable)[i].physicalPage * PageSize.
         //Then you can use bzero() to clean up and  use , bcopy() to complete the copy.
 
+        for(int i=0; i< numPages; i++){
+            pageTable[i].virtualPage = (other->pageTable)[i].virtualPage; // for now, virtual page # = phys page #
+            pageTable[i].physicalPage = (other->pageTable)[i].physicalPage;
+            pageTable[i].valid = (other->pageTable)[i].valid;
+            pageTable[i].use = (other->pageTable)[i].use;
+            pageTable[i].dirty = (other->pageTable)[i].dirty;
+            pageTable[i].readOnly = (other->pageTable)[i].readOnly;
+            bzero(&(machine->mainMemory)[(other->pageTable)[i].physicalPage*PageSize], PageSize);
+            bcopy(&(diskBuffer[0]), &((machine->mainMemory)[(other->pageTable)[i].physicalPage*PageSize]),
+                PageSize);
+        }
+        
         machineLock->Release();
     }
     else {

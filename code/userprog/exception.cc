@@ -180,19 +180,31 @@ int forkImpl() {
     // END  HINTS
 
     
-    int currPID = 0;//Change it. 
-    int newPID = -1;//Change it
+    int currPID = currentThread->space->getPCB()->getPID();//Change it. 
+    int newPID = processManager->getPID();//Change it
     if (newPID == -1) {
           fprintf(stderr, "Process %d is unable to fork a new process\n", currPID);
           return -1;
     }
     
-   
+    PCB* newpcb = new PCB(newPID, currPID);
+    newpcb->status = P_RUNNING;
+    newpcb->process = childThread;
+  
+    processManager->addProcess(newpcb, newPID);
   
     // BEGIN HINTS
     // Make a copy of the address space using AddrSpace::AddrSpace()
     // END HINTS
 
+    AddrSpace* newSpace = new AddrSpace(currentThread->space, newpcb);
+    if (!newSpace->isValid()) {
+        //fprintf(stderr, "Exec Program: %d loading %s failed\n", currPID, filename);
+        delete newSpace;
+        return -1;
+    }
+    //childThread->space = newSpace;
+    processManager->addProcess(newpcb, newPID);
 
     int childNumPages = childThread->space->getNumPages();
     if (childThread->space->pageTable == NULL) {
@@ -206,7 +218,7 @@ int forkImpl() {
     // Save states/registers of the corresponding childThread for context switch.
     // See addrspace.cc and thread.cc on how to save the states.
     // END HINTS
-    
+    newSpace->SaveState();
 
     // Mandatory printout of the forked process
     //PCB* parentPCB = currentThread->space->getPCB();
@@ -260,7 +272,7 @@ void yieldImpl() {
     //See addrspace.cc and thread.cc on how to save and restore states.
     //END HINTS
     
-   
+    //currentThread->RestoreUserState();
   
  
 
@@ -285,7 +297,10 @@ void exitImpl() {
     //Also let other processes  know this process  exits through  processManager. 
     //See pcb.cc on how to get the exit code and see processmanager.cc on the above notification.
     //END HINTS
-
+    Thread* newThread = new Thread("Exiting process");
+    PCB* exitPCB  = currentThread->space->getPCB();
+    exitPCB->status = P_BLOCKED;
+    exitPCB->process = newThread;
     
    
 
