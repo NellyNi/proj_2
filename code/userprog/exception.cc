@@ -203,8 +203,7 @@ int forkImpl() {
         delete newSpace;
         return -1;
     }
-    //childThread->space = newSpace;
-    processManager->addProcess(newpcb, newPID);
+    childThread->space = newSpace;
 
     int childNumPages = childThread->space->getNumPages();
     if (childThread->space->pageTable == NULL) {
@@ -219,6 +218,7 @@ int forkImpl() {
     // See addrspace.cc and thread.cc on how to save the states.
     // END HINTS
     newSpace->SaveState();
+    childThread->SaveUserState();
 
     // Mandatory printout of the forked process
     //PCB* parentPCB = currentThread->space->getPCB();
@@ -272,11 +272,12 @@ void yieldImpl() {
     //See addrspace.cc and thread.cc on how to save and restore states.
     //END HINTS
     
-    //currentThread->RestoreUserState();
+    currentThread->SaveUserState();
+    currentThread->space->SaveState();
+    currentThread->Yield();
+    currentThread->space->RestoreState();
+    currentThread->RestoreUserState();
   
- 
-
-
 }
 
 //----------------------------------------------------------------------
@@ -297,12 +298,8 @@ void exitImpl() {
     //Also let other processes  know this process  exits through  processManager. 
     //See pcb.cc on how to get the exit code and see processmanager.cc on the above notification.
     //END HINTS
-    Thread* newThread = new Thread("Exiting process");
-    PCB* exitPCB  = currentThread->space->getPCB();
-    exitPCB->status = P_BLOCKED;
-    exitPCB->process = newThread;
-    
-   
+    currentThread->space->getPCB()->status = status;
+    processManager->broadcast(currPID);  
 
     //Delete the current space of this process
     delete currentThread->space;
@@ -328,11 +325,13 @@ int joinImpl() {
    // Change the status of this process  in its PCB as P_RUNNING.
    // END HINTS
    //
-    
+    if (processManager->getStatus(otherPID)<0){
+        return processManager->getStatus(otherPID);
+    }
    
-  
+    processManager->join(otherPID);
  
-
+    currentThread->space->getPCB()->status = P_RUNNING;
 
     return processManager->getStatus(otherPID);
 }
@@ -492,8 +491,9 @@ int openImpl(char* filename) {
    // END HINTS
    // See useropenfile.h and pcb.cc on UserOpenFile class and its methods.
    // See sysopenfile.h and openfilemanager.cc for SysOpenFile class and its methods.
-    
-  
+    currUserFile.indexInSysOpenFileList = index;
+    currUserFile.currOffsetInFile = 0;
+    currUserFile.fileName = filename;  
  
     int currFileID = currentThread->space->getPCB()->addFile(currUserFile);
     return currFileID;
@@ -564,7 +564,7 @@ void writeImpl() {
        //BEGIN HINTS
        //Fetch data from the user space to this system buffer using  userReadWrite().
        //END HINTS
-        
+        userReadWrite(writeAddr, buffer, size, USER_WRITE);
         
         UserOpenFile* userFile = currentThread->space->getPCB()->getFile(fileID);
         if (userFile == NULL) {
@@ -577,10 +577,9 @@ void writeImpl() {
         //END HINTS 
        // See useropenfile.h and pcb.cc on UserOpenFile class and its methods.
        // See sysopenfile.h and openfilemanager.cc for SysOpenFile class and its methods.
-    
-
-
-    
+        SysOpenFile* sysopenfile=openFileManager->getFile(userFile->indexInSysOpenFileList);
+        int num_written=sysopenfile->file->WriteAt(buffer, size, userFile->currOffsetInFile);
+        userFile->currOffsetInFile +=num_written;
         
     }
     delete [] buffer;
@@ -620,9 +619,10 @@ int readImpl() {
         // END HINTS 
         // See useropenfile.h and pcb.cc on UserOpenFile class and its methods.
         // See sysopenfile.h and openfilemanager.cc for SysOpenFile class and its methods.
- 
+        SysOpenFile* sysopenfile=openFileManager->getFile(userFile->indexInSysOpenFileList);
+        numActualBytesRead=sysopenfile->file->ReadAt(buffer, size, userFile->currOffsetInFile);
+        userFile->currOffsetInFile +=numActualBytesRead;
         
-       
       
      
     
@@ -630,7 +630,9 @@ int readImpl() {
     //BEGIN HINTS
     //Now copy data from the system buffer to the targted main memory space using userReadWrite()
     //END HINTS
-    
+    int readAddr = machine->ReadRegister(4);
+    userReadWrite(readAddr, buffer, numActualBytesRead, USER_READ);
+
     delete [] buffer;
     return numActualBytesRead;
 }
@@ -653,8 +655,9 @@ void closeImpl() {
        // END HINTS
        // See useropenfile.h and pcb.cc on UserOpenFile class and its methods.
        // See sysopenfile.h and openfilemanager.cc for SysOpenFile class and its methods.
-
-       
+        SysOpenFile* sysopenfile=openFileManager->getFile(userFile->indexInSysOpenFileList);
+        sysopenfile->closedBySingleProcess();
+        currentThread->space->getPCB()->removeFile(fileID);       
         
        
       

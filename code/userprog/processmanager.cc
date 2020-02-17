@@ -104,9 +104,9 @@ void ProcessManager::join(int pid) {
     //Conditional waiting on conditionForOtherProcess
     //Decrement   processesWaitingOnPID[pid].
     //END HINTS
-    
-   
-  
+    processesWaitingOnPID[pid]++;
+    conditionForOtherProcess->Wait(lockForOtherProcess);
+    processesWaitingOnPID[pid]--;
 
     if (processesWaitingOnPID[pid] == 0) {
         processesBitMap.Clear(pid);
@@ -122,7 +122,7 @@ void ProcessManager::join(int pid) {
 
 void ProcessManager::broadcast(int pid) {
 
-    //Lock* lock = lockList[pid];
+    Lock* lock = lockList[pid];
     Condition* condition = conditionList[pid];
     pcbStatuses[pid] = pcbList[pid]->status;
 
@@ -131,7 +131,9 @@ void ProcessManager::broadcast(int pid) {
         // Wake up others
         // END HINTS
         
-        //??scheduler->ReadyToRun(thread);
+        lock->Acquire();
+        condition->Broadcast(lock);
+        lock->Release();
       
     }
 }
