@@ -1,2 +1,12 @@
 Group member: Jiawei Ni, Xinyi Li
 We write the code together.
+We follow the hints.
+1. Fork: Checked thread.cc and addrspace.cc for how to save state.
+2. Yield: Checked thread.cc and addrspace.cc for how to save state.
+3. Exit: Checked processmanager.cc for how to broadcast.
+4. Join: Checked processmanager.cc for status value and join function.
+5. Open: Checked useropenfile.h about the variables.
+6. Write: Checked openfile.cc about WriteAt() and useropenfile.h for currOffsetInFile.
+7. Read: Checked openfile.cc about ReadAt() and useropenfile.h for currOffsetInFile.
+8. Close: Checked sysopenfile.h, pcb.cc, useropenfile.h, openfilemanager.cc.
+9. AddrSpace: Write copy constructor after read the constructor. Checked ReadFile() function for bzero and bcopy.
